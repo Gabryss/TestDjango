@@ -40,6 +40,13 @@ def create_question(question_text, days):
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
 
+def create_choice(question_id, choice_text):
+    """
+    Create a choice with the given 'question_id' and the given 'choice_text'.
+    """
+    question=Question.objects.get(pk=question_id)
+    return question.choice_set.create(choice_text=choice_text, votes=0)
+
 
 class QuestionIndexViewTest(TestCase):
     def test_no_questions(self):
@@ -111,5 +118,13 @@ class QuestionDetailViewTests(TestCase):
         """
         past_question = create_question(question_text= 'Past question', days=-5)
         url = reverse('polls:detail', args=(past_question.id,))
-        response= self.client.get(url)
+        response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
+
+    def test_question_no_choice(self):
+        """
+        Each question should have at least one choice.
+        """
+        question_no_choice = create_question(question_text='No choice question', days=-2)
+        empty_choices=list(question_no_choice.choice_set.all())
+        self.assertEqual(empty_choices, [])
